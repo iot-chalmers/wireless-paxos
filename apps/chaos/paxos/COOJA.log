@@ -1,0 +1,11 @@
+[16:50:23 - main] [Cooja.java:1349] [INFO] - > Starting Cooja
+[16:50:24 - main] [Cooja.java:2855] [INFO] - External tools default settings: /external_tools_macosx.config
+[16:50:24 - main] [Cooja.java:2885] [INFO] - External tools user settings: /Users/valentin/.cooja.user.properties
+[16:50:24 - main] [Cooja.java:1558] [WARN] - Could not load mote type class: org.contikios.cooja.mspmote.Wsn430MoteType
+[16:50:25 - main] [Cooja.java:1355] [INFO] - > Creating simulation
+[16:50:38 - main] [Cooja.java:1360] [FATAL] - No simulation, aborting quickstart
+ed: 123456
+[16:50:30 - main] [Visualizer.java:256] [INFO] - Registered external visualizer: org.contikios.cooja.plugins.skins.DGRMVisualizerSkin
+[16:50:31 - main] [Cooja.java:1365] [INFO] - > Creating mote type
+[16:50:34 - AWT-EventQueue-0] [CompileContiki.java:140] [INFO] - > make clean TARGET=cooja 
+[16:50:36 - main] [Cooja.java:1373] [FATAL] - Mote type initialization failed, aborting quickstart

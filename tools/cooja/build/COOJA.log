@@ -1,0 +1,3 @@
+[09:29:42 - main] [Cooja.java:3181] [WARN] - JAVA_HOME environment variable not set, Cooja motes may not compile
+[09:29:44 - AWT-EventQueue-0] [Cooja.java:2865] [INFO] - External tools default settings: /external_tools_macosx.config
+[09:29:44 - AWT-EventQueue-0] [Cooja.java:2895] [INFO] - External tools user settings: /Users/valentin/.cooja.user.properties
