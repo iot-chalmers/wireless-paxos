@@ -1,6 +1,4 @@
-# Wireless Paxos
-
-# Paxos Made Wireless: Cosnensus in the Air
+# Paxos Made Wireless: Consensus in the Air
 
 ## Introduction
 
@@ -32,8 +30,21 @@ The implementation of Wireless Paxos can be found in [core/net/mac/chaos/lib/pax
 
 ### Applications using consensus
 An example of application using Wireless Paxos can be found at [apps/chaos/paxos](./apps/chaos/paxos).
-
 An example of application using Wireless Multi-Paxos can be found at [apps/chaos/multipaxos](./apps/chaos/multipaxos).
 
+## Running Wireless Paxos
 
+### In Cooja
 
+Go to [apps/chaos/paxos](./apps/chaos/paxos) and compile using:
+```
+make clean TARGET=sky && make cooja TARGET=sky log=0 printf=1 tx=31 mch=1 pch=4 sec=5 src=2 sync=0 failure=0 dynamic=1 initiator=3 interval=39 max_node_count=50 duration=15 description=“paxos” -j4
+```
+Then, start a new simulation in Cooja. Add new motes in Motes > Add motes > Create new mote type > Sky mote using paxos-app.sky as firmware.
+Run the simulation. After a group initialization, the nodes will run the Paxos application.
+
+You can run Wireless Multi-Paxos in [apps/chaos/multipaxos](./apps/chaos/multipaxos)
+
+### In Flocklab
+
+Use the same firmware as for cooja.
