@@ -40,9 +40,8 @@
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
 
-#ifndef COOJA
+#undef COOJA
 #define COOJA 1
-#endif
 
 #define ENABLE_MULTIPLE_INITIATORS 0
 #define N_SOURCES 1
@@ -70,48 +69,89 @@
 #endif
 
 #undef LLSEC802154_CONF_SECURITY_LEVEL
+#ifndef _param_sec
+#define LLSEC802154_CONF_SECURITY_LEVEL 5
+#else
 #define LLSEC802154_CONF_SECURITY_LEVEL _param_sec //MIC
+#endif
 
+#undef JOIN_STRESS_TEST
+#ifndef _param_join
+#define JOIN_STRESS_TEST 0
+#else
 #define JOIN_STRESS_TEST (_param_join == 2)
+#endif
 
 //remember to disable logs
 #undef WITH_CHAOS_LOG
+#ifndef _param_log
+#define WITH_CHAOS_LOG 0
+#else
 #define WITH_CHAOS_LOG _param_log
+#endif
 //don't disable PRINTF if logs are enabled ;)
 #undef CHAOS_DEBUG_PRINTF
+#ifndef _param_printf
+#define CHAOS_DEBUG_PRINTF 1
+#else
 #define CHAOS_DEBUG_PRINTF _param_printf
+#endif
 //disable logging of flags since it takes a long time
 #undef CHAOS_LOG_FLAGS
+#ifndef _param_logflags
+#define CHAOS_LOG_FLAGS 0
+#else
 #define CHAOS_LOG_FLAGS _param_logflags
+#endif
 
 #undef CHAOS_USE_SRC_ID
+#ifdef _param_src
+#define CHAOS_USE_SRC_ID 2
+#else
 #define CHAOS_USE_SRC_ID _param_src
+#endif
 
+#ifndef _param_dst
 #undef CHAOS_USE_DST_ID
 #define CHAOS_USE_DST_ID _param_dst
+#endif
 
+#ifdef _param_sync
 #undef CHAOS_ENABLE_SFD_SYNC
 #define CHAOS_ENABLE_SFD_SYNC _param_sync
+#endif
 
+#ifdef _param_rank
 #undef CHAOS_USE_SRC_RANK
 #define CHAOS_USE_SRC_RANK _param_rank
+#endif
 
+#ifdef _param_interval
 /* Chaos timing */
 #undef CHAOS_INTERVAL
 #define CHAOS_INTERVAL   (_param_interval*(RTIMER_SECOND/10))
 //(40*(RTIMER_SECOND/10))
+#endif
 
+#ifdef _param_cg
 #undef CHAOS_RF_CHANNEL
 #define CHAOS_RF_CHANNEL _param_ch
+#endif
 
+#ifdef _param_max_node_count
 #undef MAX_NODE_COUNT
 #define MAX_NODE_COUNT _param_max_node_count
+#endif
 
+#ifdef _param_mch
 #undef CHAOS_MULTI_CHANNEL
 #define CHAOS_MULTI_CHANNEL _param_mch
+#endif
 
+#ifdef _param_pch
 #undef CHAOS_MULTI_CHANNEL_PARALLEL_SEQUENCES
 #define CHAOS_MULTI_CHANNEL_PARALLEL_SEQUENCES _param_pch
+#endif
 
 #define TXPW0 31 //max
 #define TXPW1 27
@@ -122,9 +162,10 @@
 #define TXPW6 7
 #define TXPW7 3 //min
 
+#ifdef _param_txpw
 #undef CHAOS_TX_POWER
 #define CHAOS_TX_POWER _param_txpw
-
+#endif
 //TX_POWER
 //  {  0, 31 }, /* 0xff */
 //  { -1, 27 }, /* 0xfb */
@@ -182,9 +223,13 @@
 #undef CC2420_CONF_AUTOACK
 #define CC2420_CONF_AUTOACK              0
 
+#undef CC2420_FAST_TURNAROUND
 #define CC2420_FAST_TURNAROUND 1 //1: fast -- 8 symbols = 128us, else: 12 symbols = 192us --> 2 symbols in DCO 4MHz ticks = 32*10^(-6)/(2^(-22)) = 134.22
+#undef CC2420_CORR_THR
 #define CC2420_CORR_THR (20)
+#undef CC2420_continuously_update_frequency_offset_filter
 #define CC2420_continuously_update_frequency_offset_filter (0)
+#undef CC2420_PREAMBLE_LENGTH
 #define CC2420_PREAMBLE_LENGTH 2 // 2 is default -- compatible with 802.15.4. It should be between 0-15 --> 1-16 zero leading bytes
 
 #undef DCOSYNCH_CONF_ENABLED
@@ -215,3 +260,4 @@
 
 
 #endif /* PROJECT_CONF_H_ */
+
