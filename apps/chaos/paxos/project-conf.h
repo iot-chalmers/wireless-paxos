@@ -41,10 +41,9 @@
 #define PROJECT_CONF_H_
 
 #ifndef COOJA
-#define COOJA 0
+#define COOJA 1
 #endif
 
-#undef FAILURES_RATE
 
 #define ENABLE_MULTIPLE_INITIATORS 0
 #define N_SOURCES 2
@@ -125,6 +124,9 @@
 #undef CHAOS_TX_POWER
 #define CHAOS_TX_POWER _param_txpw
 
+#undef MAX_NODE_COUNT
+#define MAX_NODE_COUNT _param_max_node_count
+
 //TX_POWER
 //  {  0, 31 }, /* 0xff */
 //  { -1, 27 }, /* 0xfb */
@@ -181,6 +183,11 @@
 
 #undef CC2420_CONF_AUTOACK
 #define CC2420_CONF_AUTOACK              0
+
+#define CC2420_FAST_TURNAROUND 1 //1: fast -- 8 symbols = 128us, else: 12 symbols = 192us --> 2 symbols in DCO 4MHz ticks = 32*10^(-6)/(2^(-22)) = 134.22
+#define CC2420_CORR_THR (20)
+#define CC2420_continuously_update_frequency_offset_filter (0)
+#define CC2420_PREAMBLE_LENGTH 2 // 2 is default -- compatible with 802.15.4. It should be between 0-15 --> 1-16 zero leading bytes
 
 #undef DCOSYNCH_CONF_ENABLED
 #define DCOSYNCH_CONF_ENABLED            0

@@ -2,7 +2,15 @@
 
 CONTIKI_PROJECT = multipaxos-app
 CONTIKI_WITH_CHAOS = 1
-CHAOS_NODE_DYNAMIC=$(dynamic)
+ifeq ($(dynamic),1)
+	CHAOS_NODE_DYNAMIC=1
+else
+	ifeq ($(dynamic),2)
+		CHAOS_NODE_DYNAMIC=1
+	else
+		CHAOS_NODE_DYNAMIC=0
+	endif
+endif
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
@@ -15,12 +23,6 @@ include $(CONTIKI)/platform/wsn430/Makefile.common
 
 id: burn-nodeid.upload
 
-
-all: $(CONTIKI_PROJECT)
-
-
-coojatest: clean
-coojatest:
-	echo "hi"
-	$(MAKE) cooja log=0 printf=1 tx=31 mch=1 pch=0 sec=0 src=1 sync=0 failure=0 dynamic=2 initiator=3 interval=29 max_node_count=15 duration=5 description="paxos-test"
-
+all: 
+	log=0 printf=1 tx=31 mch=1 pch=2 sec=5 src=2 sync=0 failure=0 dynamic=1 initiator=3 interval=39 max_node_count=50 duration=15 description=multipaxos
+	$(CONTIKI_PROJECT)
