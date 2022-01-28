@@ -78,8 +78,6 @@ import se.sics.mspsim.util.MapEntry;
 import se.sics.mspsim.util.MapTable;
 import se.sics.mspsim.profiler.SimpleProfiler;
 
-import org.contikios.cooja.mspmote.interfaces.MspClock;
-
 /**
  * @author Fredrik Osterlind
  */
@@ -290,22 +288,13 @@ public abstract class MspMote extends AbstractEmulatedMote implements Mote, Watc
 
   private long lastExecute = -1; /* Last time mote executed */
   private long nextExecute;
-  
-  private long executed = 0;
-  private long skipped = 0;
-  
   public void execute(long time) {
     execute(time, EXECUTE_DURATION_US);
   }
-
   public void execute(long t, int duration) {
-    MspClock clock = ((MspClock) (myMoteInterfaceHandler.getClock()));
-    double deviation = clock.getDeviation();
-    long drift = clock.getDrift();
-
     /* Wait until mote boots */
-    if (!booted && clock.getTime() < 0) {
-      scheduleNextWakeup(t - clock.getTime());
+    if (!booted && myMoteInterfaceHandler.getClock().getTime() < 0) {
+      scheduleNextWakeup(t - myMoteInterfaceHandler.getClock().getTime());
       return;
     }
     booted = true;
@@ -324,17 +313,12 @@ public abstract class MspMote extends AbstractEmulatedMote implements Mote, Watc
       throw new RuntimeException("Bad event ordering: " + lastExecute + " < " + t);
     }
 
-    if (((1-deviation) * executed) > skipped) {
-      lastExecute = lastExecute + duration; // (t+duration) - (t-lastExecute);
-      nextExecute = t+duration;
-      skipped += duration;
-      scheduleNextWakeup(nextExecute);
-    }
-    
     /* Execute MSPSim-based mote */
     /* TODO Try-catch overhead */
     try {
-      nextExecute = myCpu.stepMicros(Math.max(0, t-lastExecute), duration) + t + duration;
+      nextExecute =
+        t + duration +
+        myCpu.stepMicros(t - lastExecute, duration);
       lastExecute = t;
     } catch (EmulationException e) {
       String trace = e.getMessage() + "\n\n" + getStackTrace();
@@ -346,9 +330,7 @@ public abstract class MspMote extends AbstractEmulatedMote implements Mote, Watc
     if (nextExecute < t) {
       throw new RuntimeException(t + ": MSPSim requested early wakeup: " + nextExecute);
     }
-
     /*logger.debug(t + ": Schedule next wakeup at " + nextExecute);*/
-    executed += duration; 
     scheduleNextWakeup(nextExecute);
 
     if (stopNextInstruction) {

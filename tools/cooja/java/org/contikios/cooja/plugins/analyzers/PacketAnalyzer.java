@@ -27,7 +27,7 @@ public abstract class PacketAnalyzer {
 
     public Packet(byte[] data, int level) {
       this.level = level;
-      this.data = data.clone();
+      this.data = data;
       this.size = data.length;
     }
 

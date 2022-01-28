@@ -72,10 +72,6 @@ public class DirectedGraphMedium extends AbstractRadioMedium {
   /* Used for optimizing lookup time */
   private Hashtable<Radio,DGRMDestinationRadio[]> edgesTable = new Hashtable<Radio,DGRMDestinationRadio[]>();
 
-  private boolean WITH_CAPTURE_EFFECT = true;
-  private double CAPTURE_EFFECT_PREAMBLE_DURATION = (double) (1000*1000*4*0.5*8/250000); /* 2 bytes, 250kbit/s, us */;
-  private double CAPTURE_EFFECT_THRESHOLD = (double) 3; /* dB, according to previous 802.15.4 studies */
-  
   public DirectedGraphMedium() {
     /* Do not initialize radio medium: use only for hash table */
     super(null);
@@ -97,7 +93,8 @@ public class DirectedGraphMedium extends AbstractRadioMedium {
     edges.add(e);
     requestEdgeAnalysis();
 
-    radioTransmissionObservable.setChangedAndNotify();
+    ((AbstractRadioMedium.RadioMediumObservable)
+        this.getRadioMediumObservable()).setRadioMediumChangedAndNotify();
   }
 
   public void removeEdge(Edge edge) {
@@ -108,15 +105,16 @@ public class DirectedGraphMedium extends AbstractRadioMedium {
     edges.remove(edge);
     requestEdgeAnalysis();
 
-
-    radioTransmissionObservable.setChangedAndNotify();
+    ((AbstractRadioMedium.RadioMediumObservable)
+        this.getRadioMediumObservable()).setRadioMediumChangedAndNotify();
   }
 
   public void clearEdges() {
     edges.clear();
     requestEdgeAnalysis();
 
-    radioTransmissionObservable.setChangedAndNotify();
+    ((AbstractRadioMedium.RadioMediumObservable)
+        this.getRadioMediumObservable()).setRadioMediumChangedAndNotify();
   }
 
   public Edge[] getEdges() {
@@ -168,19 +166,6 @@ public class DirectedGraphMedium extends AbstractRadioMedium {
       DGRMDestinationRadio dstRadios[] =  getPotentialDestinations(conn.getSource());
       if (dstRadios == null) continue; 
       for (DGRMDestinationRadio dstRadio : dstRadios) {
-
-        int activeSourceChannel = conn.getSource().getChannel();
-        int edgeChannel = dstRadio.channel;
-        int activeDstChannel = dstRadio.radio.getChannel();
-        if (activeSourceChannel != -1) {
-          if (edgeChannel != -1 && activeSourceChannel != edgeChannel) {
-            continue;
-          }
-          if (activeDstChannel != -1 && activeSourceChannel != activeDstChannel) {
-            continue;
-          }
-        }
-
         if (dstRadio.radio.getCurrentSignalStrength() < dstRadio.signal) {
           dstRadio.radio.setCurrentSignalStrength(dstRadio.signal);
         }
@@ -226,9 +211,6 @@ public class DirectedGraphMedium extends AbstractRadioMedium {
 
     this.edgesTable = arrTable;
     edgesDirty = false;
-    
-    /* Radio Medium changed here so notify Observers */
-    radioMediumObservable.setChangedAndNotify();
   }
 
   /**
@@ -265,117 +247,61 @@ public class DirectedGraphMedium extends AbstractRadioMedium {
 
     /*logger.info(source + ": " + destinations.length + " potential destinations");*/
     for (DGRMDestinationRadio dest: destinations) {
-    
+      
       if (dest.radio == source) {
         /* Fail: cannot receive our own transmission */
         /*logger.info(source + ": Fail, receiver is sender");*/
         continue;
       }
 
-      int srcc = source.getChannel();
-      int dstc = dest.radio.getChannel();
-      int edgeChannel = dest.getChannel();
 
-      if (edgeChannel >= 0 && dstc >= 0 && edgeChannel != dstc) {
-      	/* Fail: the edge is configured for a different radio channel */
-        continue;
-      } else if (srcc >= 0 && dstc >= 0 && srcc != dstc) {
-        /* Fail: radios are on different (but configured) channels */
-        newConn.addInterfered(dest.radio);
-        continue;
-      } else if (!dest.radio.isRadioOn()) {
+      if (!dest.radio.isRadioOn()) {
         /* Fail: radio is off */
         /*logger.info(source + ": Fail, off");*/
         newConn.addInterfered(dest.radio);
         continue;
-      } else if (dest.ratio < 1.0 && random.nextDouble() > dest.ratio) {
+      }
+      
+      if (dest.radio.isInterfered()) {
+        /* Fail: radio is interfered in another connection */
+        /*logger.info(source + ": Fail, interfered");*/
+        newConn.addInterfered(dest.radio);
+        continue;
+      }
+
+      int srcc = source.getChannel();
+      int dstc = dest.radio.getChannel(); 
+      if ( srcc >= 0 && dstc >= 0 && srcc != dstc) {
+    	/* Fail: radios are on different (but configured) channels */
+        continue;
+      }
+      
+      if (dest.radio.isReceiving()) {
+         /* Fail: radio is already actively receiving */
+         /*logger.info(source + ": Fail, receiving");*/
+         newConn.addInterfered(dest.radio);
+
+         /* We will also interfere with the other connection */
+         dest.radio.interfereAnyReception();
+         
+         // Find connection, that is sending to that radio
+         // and mark the destination as interfered
+         for (RadioConnection conn : getActiveConnections()) {
+           for (Radio dstRadio : conn.getDestinations()) {
+             if (dstRadio == dest.radio) {
+               conn.addInterfered(dest.radio);;
+               break;
+             }
+           }
+         }        
+         continue;
+      }
+            
+      if (dest.ratio < 1.0 && random.nextDouble() > dest.ratio) {
     	/* Fail: Reception ratio */
         /*logger.info(source + ": Fail, randomly");*/
         newConn.addInterfered(dest.radio);
         continue;
-      } else if (dest.radio.isInterfered()) {
-        /* Fail: radio is interfered in another connection */
-        /*logger.info(source + ": Fail, interfered");*/
-      	 if (WITH_CAPTURE_EFFECT) {
-           /* XXX TODO Implement me:
-            * If the new transmission is both stronger and the SFD has not
-            * been received by the weaker transmission, then this new
-            * transmission should be received.
-            *
-            * When this is implemented, also implement
-            * RadioConnection.java:getReceptionStartTime()
-            */
-
-           /* Was interfered: keep interfering */
-      		 newConn.addInterfered(dest.radio);
-         } else {
-           /* Was interfered: keep interfering */
-        	 newConn.addInterfered(dest.radio);
-         }
-        continue;
-      } else if (dest.radio.isTransmitting()) {
-      	newConn.addInterfered(dest.radio);
-      	continue;
-      } else if (dest.radio.isReceiving()) {
-        /* Was already receiving: start interfering.
-         * Assuming no continuous preambles checking */
-      	
-      	if (!WITH_CAPTURE_EFFECT) {
-           /* Fail: radio is already actively receiving */
-           /*logger.info(source + ": Fail, receiving");*/
-           newConn.addInterfered(dest.radio);
-          
-           /* We will also interfere with the other connection */
-           dest.radio.interfereAnyReception();
-           
-           // Find connection, that is sending to that radio
-           // and mark the destination as interfered
-           for (RadioConnection conn : getActiveConnections()) {
-             for (Radio dstRadio : conn.getDestinations()) {
-               if (dstRadio == dest.radio) {
-                 conn.addInterfered(dest.radio);
-                 break;
-               }
-             }
-           }        
-           continue;
-      	} else {
-      		final Radio recv = dest.radio;
-          /* CAPTURE EFFECT */
-          double currSignal = recv.getCurrentSignalStrength();
-          /* Capture effect: recv-radio is already receiving.
-           * Are we strong enough to interfere? */
-          double recvSignalStrength = dest.signal;
-          if (recvSignalStrength < currSignal - CAPTURE_EFFECT_THRESHOLD /* config */) {
-            /* No, we are too weak */
-            continue;
-          } else {
-            /* New signal is strong enough to either interfere with ongoing transmission,
-             * or to be received/captured */
-            long startTime = newConn.getReceptionStartTime();
-            boolean interfering = (simulation.getSimulationTime()-startTime) >= CAPTURE_EFFECT_PREAMBLE_DURATION; /* us */
-            if (interfering) {
-            	newConn.addInterfered(recv);
-              recv.interfereAnyReception();
-
-              /* Interfere receiver in all other active radio connections */
-              for (RadioConnection conn : getActiveConnections()) {
-                if (conn.isDestination(recv)) {
-                  conn.addInterfered(recv);
-                }
-              }
-            } else {
-              /* XXX Warning: removing destination from other connections */
-              for (RadioConnection conn : getActiveConnections()) {
-                if (conn.isDestination(recv)) {
-                  conn.removeDestination(recv);
-                }
-              }
-
-              /* Success: radio starts receiving */
-            }
-          }
-      	}
       }
 
       /* Success: radio starts receiving */

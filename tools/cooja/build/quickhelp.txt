@@ -11,3 +11,4 @@ GETTING_STARTED = \
 <b>Getting started</b><br>\
 <br>\
 <br><i>F1:</i> Toggle quick help</i>
+

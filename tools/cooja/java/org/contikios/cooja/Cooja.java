@@ -139,7 +139,6 @@ import org.contikios.cooja.plugins.ScriptRunner;
 import org.contikios.cooja.plugins.SimControl;
 import org.contikios.cooja.plugins.SimInformation;
 import org.contikios.cooja.util.ExecuteJAR;
-import org.contikios.cooja.util.ScnObservable;
 
 /**
  * Main file of COOJA Simulator. Typically contains a visualizer for the
@@ -326,10 +325,21 @@ public class Cooja extends Observable {
 
   private Vector<Class<? extends Positioner>> positionerClasses = new Vector<Class<? extends Positioner>>();
 
+  private class HighlightObservable extends Observable {
+    private void setChangedAndNotify(Mote mote) {
+      setChanged();
+      notifyObservers(mote);
+    }
+  }
+  private HighlightObservable moteHighlightObservable = new HighlightObservable();
 
-  private ScnObservable moteHighlightObservable = new ScnObservable();
-
-  private ScnObservable moteRelationObservable = new ScnObservable();
+  private class MoteRelationsObservable extends Observable {
+    private void setChangedAndNotify() {
+      setChanged();
+      notifyObservers();
+    }
+  }
+  private MoteRelationsObservable moteRelationObservable = new MoteRelationsObservable();
 
   private JTextPane quickHelpTextPane;
   private JScrollPane quickHelpScroll;
@@ -3480,9 +3490,7 @@ public class Cooja extends Observable {
       }
 
       XMLOutputter outputter = new XMLOutputter();
-      Format fmt = Format.getPrettyFormat();
-      fmt.setLineSeparator("\n");
-      outputter.setFormat(fmt);
+      outputter.setFormat(Format.getPrettyFormat());
       outputter.output(doc, out);
       out.close();
 

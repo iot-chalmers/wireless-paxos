@@ -93,7 +93,7 @@ public class Simulation extends Observable implements Runnable {
 
   private long maxMoteStartupDelay = 1000*MILLISECOND;
 
-  private SafeRandom randomGenerator;
+  private Random randomGenerator = new Random();
 
   private boolean hasMillisecondObservers = false;
   private MillisecondObservable millisecondObservable = new MillisecondObservable();
@@ -322,7 +322,6 @@ public class Simulation extends Observable implements Runnable {
    */
   public Simulation(Cooja cooja) {
     this.cooja = cooja;
-    randomGenerator = new SafeRandom(this);
   }
 
   /**

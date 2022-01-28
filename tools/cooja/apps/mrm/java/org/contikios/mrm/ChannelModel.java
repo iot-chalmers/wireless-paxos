@@ -53,8 +53,6 @@ import org.contikios.cooja.Simulation;
 import org.contikios.cooja.interfaces.DirectionalAntennaRadio;
 import org.contikios.cooja.interfaces.Radio;
 import org.contikios.cooja.radiomediums.AbstractRadioMedium;
-import org.contikios.cooja.util.ScnObservable;
-
 import statistics.GaussianWrapper;
 
 /**
@@ -105,7 +103,13 @@ public class ChannelModel {
   /**
    * Notifies observers when this channel model has changed settings.
    */
-  private ScnObservable settingsObservable = new ScnObservable();
+  private class SettingsObservable extends Observable {
+    private void notifySettingsChanged() {
+      setChanged();
+      notifyObservers();
+    }
+  }
+  private SettingsObservable settingsObservable = new SettingsObservable();
   public enum Parameter {
     apply_random,
     snr_threshold,
@@ -326,7 +330,7 @@ public class ChannelModel {
    */
   public void removeAllObstacles() {
     myObstacleWorld.removeAll();
-    settingsObservable.setChangedAndNotify();
+    settingsObservable.notifySettingsChanged();
   }
 
   /**
@@ -356,7 +360,7 @@ public class ChannelModel {
     myObstacleWorld.addObstacle(startX, startY, width, height);
 
     if (notify) {
-      settingsObservable.setChangedAndNotify();
+      settingsObservable.notifySettingsChanged();
     }
   }
 
@@ -438,7 +442,7 @@ public class ChannelModel {
     needToPrecalculateFSPL = true;
     needToPrecalculateOutputPower = true;
 
-    settingsObservable.setChangedAndNotify();
+    settingsObservable.notifySettingsChanged();
   }
 
   /**
@@ -446,9 +450,9 @@ public class ChannelModel {
    * will be notified.
    */
   public void notifySettingsChanged() {
-    settingsObservable.setChangedAndNotify();
+    settingsObservable.notifySettingsChanged();
   }
-  
+
   /**
    * Path loss component from Friis' transmission equation.
    * Uses frequency and distance only.
@@ -1880,7 +1884,7 @@ public class ChannelModel {
     }
     needToPrecalculateFSPL = true;
     needToPrecalculateOutputPower = true;
-    settingsObservable.setChangedAndNotify();
+    settingsObservable.notifySettingsChanged();
     return true;
   }
 
